@@ -1,0 +1,4 @@
+﻿  adpcm.cpp
+F:\PROJ\ConsoleApp1\adpcm\adpcm.cpp(522,24): warning C4244: “=”: 从“long”转换到“short”，可能丢失数据
+    正在创建库 F:\PROJ\ConsoleApp1\x64\Debug\adpcm.lib 和对象 F:\PROJ\ConsoleApp1\x64\Debug\adpcm.exp
+  adpcm.vcxproj -> F:\PROJ\ConsoleApp1\x64\Debug\adpcm.dll
