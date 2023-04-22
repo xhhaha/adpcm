@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
@@ -21,17 +22,30 @@ namespace adpcm
     {
 
         #region Main Function
-        static void Main(string[] args)
+        unsafe static void Main(string[] args)
         {
             Stopwatch stopwatch = new Stopwatch();
             string url = "http://192.168.1.12:8080/?cmd=audio_data_request&voice_id=444169194790036434";
             //url = "http://192.168.1.12:8080/?cmd=audio_data_request&voice_id=15081149429123375989";
-            string readpath = "C:\\Users\\Administrator\\Desktop\\14ms.g721";
-            string savepath = @"C:\Users\Administrator\Documents\Downloads\Music\jiema.wav";//  解码后保存地址
+            string readpath = "C:\\Users\\Administrator\\Desktop\\daijiema.g721";
+            string savepath = @"C:\Users\Administrator\Documents\Downloads\Music\";//  解码后保存地址
             stopwatch.Restart();
-            //byte[] data = localpath2bytes(path); // 读取用户计算机本地文件 已测 无问题
-            byte[] data = HttpGetBytes(url);// 获取远程文件 转 byte 已测无问题
-            adpcmg721towav(data, savepath);// 如果文件写入失败 则需要查看 Windwos 当前登录的用户权限问题 和目录权限 NTFS 拒绝大于允许
+            for (int i = 0; i < 5; i++)
+            {
+                //byte[] data = HttpGetBytes(url);
+                byte[] data = localpath2bytes(readpath); // 读取用户计算机本地文件 已测 无问题                          
+                #region 结构体 重新分配内存初始化
+                var init = private_init_state();
+                int size = Marshal.SizeOf(init);
+                byte[] byteobj = new byte[size];
+                IntPtr intPtr = Marshal.AllocHGlobal(size);
+                Marshal.StructureToPtr(init, intPtr, false);
+                Marshal.Copy(intPtr, byteobj, 0, size);
+                #endregion
+
+                adpcmg721towav(data, intPtr, savepath + Guid.NewGuid().ToString() + ".wav");// 如果文件写入失败 则需要查看 Windwos 当前登录的用户权限问题 和目录权限 NTFS 拒绝大于允许
+                Console.WriteLine(string.Format("循环第{0}次执行完毕", i + 1));
+            }
             stopwatch.Stop();
             Console.WriteLine(string.Format("耗时:{0}ms", stopwatch.ElapsedMilliseconds));
             Console.WriteLine("执行完毕请查看");
@@ -45,9 +59,40 @@ namespace adpcm
             FileStream fsRead = new FileStream(path, FileMode.Open, FileAccess.Read);
             byte[] array = new byte[fsRead.Length];
             fsRead.Read(array, 0, array.Length);
-            fsRead.Close(); 
+            fsRead.Close();
             return array;
         }
+        #endregion
+
+        #region 默认结构体 实例化 
+        /// <summary>
+        /// 默认结构体 实例化 
+        /// </summary>
+        /// <returns></returns>
+        public static G72x_STATE private_init_state()
+        {
+            G72x_STATE state_ptr = new G72x_STATE();
+            int cnta;
+
+            state_ptr.yl = 34816;
+            state_ptr.yu = 544;
+            state_ptr.dms = 0;
+            state_ptr.dml = 0;
+            state_ptr.ap = 0;
+            for (cnta = 0; cnta < 2; cnta++)
+            {
+                state_ptr.a[cnta] = 0;
+                state_ptr.pk[cnta] = 0;
+                state_ptr.sr[cnta] = 32;
+            }
+            for (cnta = 0; cnta < 6; cnta++)
+            {
+                state_ptr.b[cnta] = 0;
+                state_ptr.dq[cnta] = 32;
+            }
+            state_ptr.td = (char)0;
+            return state_ptr;
+        } 
         #endregion
 
         #region 默认结构体
@@ -126,10 +171,9 @@ namespace adpcm
         #endregion
 
         #region adpcmg721towav
-        public unsafe static void adpcmg721towav(byte[] bytes, string savepath)
+        public unsafe static void adpcmg721towav(byte[] bytes, IntPtr state, string savepath)
         {
-            RuntimeTypeHandle byteshandle = bytes.GetType().TypeHandle;
-            byte[] result = AdpcmG721.decode721(bytes);
+            byte[] result = AdpcmG721.decode721(bytes, state);
             microphoneWav = new WavHelper(savepath, 8000, 1);
             microphoneWav.WriteAudioData(result);
             microphoneWav.Dispose();
@@ -151,18 +195,28 @@ namespace adpcm
         #region HttpGetBytes
         public static byte[] HttpGetBytes(string url)
         {
-            byte[] result = null;
-            try
-            {   // 说明 如果页面返回的是二进制 内容  不是唤起浏览器下载 则使用 WebClient 如果 服务端返回的是base64 或者其他直接可取数据
-                // 则需要通过 HttpWebRequest 
-                WebClient MyWebClient = new WebClient();
-                MyWebClient.Credentials = CredentialCache.DefaultCredentials;
-                result = MyWebClient.DownloadData(url); 
-            }
-            catch (Exception ex)
+            byte[] result = new demo().getsuijibyte();
+            // string dizhi=result.GetType().TypeHandle.Value.ToString();
+            using (WebClient MyWebClient = new WebClient())
             {
-                Debug.WriteLine(ex.ToString());
+                MyWebClient.Headers["User-Agent"] = "blah";
+                MyWebClient.Credentials = CredentialCache.DefaultCredentials;
+                result = MyWebClient.DownloadData(url);
+                //return MyWebClient.DownloadData(url);
+                //result =new byte[]{ 0, 1,2,3,4,56,7,8,9};
+                MyWebClient.Dispose();
             }
+
+            //try
+            //{   // 说明 如果页面返回的是二进制 内容  不是唤起浏览器下载 则使用 WebClient 如果 服务端返回的是base64 或者其他直接可取数据
+            //    // 则需要通过 HttpWebRequest 
+            //    WebClient MyWebClient = new WebClient();
+
+            //}
+            //catch (Exception ex)
+            //{
+            //    Debug.WriteLine(ex.ToString());
+            //}
             return result;
         }
         #endregion

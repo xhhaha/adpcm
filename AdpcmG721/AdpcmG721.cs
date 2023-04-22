@@ -20,7 +20,7 @@ namespace adpcm
             IntPtr buff = (IntPtr)Marshal.AllocHGlobal(bytes.Length / 4);
             try
             {
-                setadpcm_coder(bytes, buff, bytes.Length, new G72x_STATE().GetType().TypeHandle.Value);
+                setadpcm_coder(bytes, byteshandle.Value, bytes.Length, new G72x_STATE().GetType().TypeHandle.Value);
             }
             catch (Exception ex)
             {
@@ -31,17 +31,17 @@ namespace adpcm
             {
                 result[i] = Marshal.ReadByte(buff, i);
             }
-            Marshal.FreeHGlobal(buff);//Close
+            //Marshal.FreeHGlobal(buff);//Close
             return result;
         }
 
-        public unsafe static byte[] decode721(byte[] bytes)
+        public unsafe static byte[] decode721(byte[] bytes,IntPtr state)
         {
             IntPtr buff = (IntPtr)Marshal.AllocHGlobal(bytes.Length * 5);
+            //IntPtr state = new G72x_STATE().GetType().TypeHandle.Value;
             try
             {
-                getadpcm_decoder(bytes, buff, bytes.Length * 2, new G72x_STATE().GetType().TypeHandle.Value);
-
+                getadpcm_decoder(bytes, buff, bytes.Length * 2, state);
             }
             catch (Exception ex)
             {
@@ -53,11 +53,14 @@ namespace adpcm
                 result[i] = Marshal.ReadByte(buff, i);
             }
             Marshal.FreeHGlobal(buff);//Close
+            //Marshal.FreeHGlobal(state);
+            state = (IntPtr)Marshal.AllocHGlobal(102400000);
+           // Marshal.FreeHGlobal();
             return result;
         }
 
         [DllImport("adpcm.dll")]
-        private static extern void getadpcm_decoder(byte[] indata, IntPtr outdata, int len, IntPtr state);
+        private unsafe static extern void getadpcm_decoder(byte[] indata, IntPtr outdata, int len, IntPtr state);
 
 
         [DllImport("adpcm.dll", CharSet = CharSet.Auto)]
