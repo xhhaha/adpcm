@@ -54,8 +54,8 @@ namespace adpcm
             }
             Marshal.FreeHGlobal(buff);//Close
             //Marshal.FreeHGlobal(state);
-            state = (IntPtr)Marshal.AllocHGlobal(102400000);
-           // Marshal.FreeHGlobal();
+            //state = (IntPtr)Marshal.AllocHGlobal(102400000);
+            Marshal.FreeHGlobal(state);
             return result;
         }
 

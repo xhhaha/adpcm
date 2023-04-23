@@ -29,11 +29,12 @@ namespace adpcm
             //url = "http://192.168.1.12:8080/?cmd=audio_data_request&voice_id=15081149429123375989";
             string readpath = "C:\\Users\\Administrator\\Desktop\\daijiema.g721";
             string savepath = @"C:\Users\Administrator\Documents\Downloads\Music\";//  解码后保存地址
-            stopwatch.Restart();
-            for (int i = 0; i < 5; i++)
+            
+            for (int i = 0; i < 99999; i++)
             {
-                //byte[] data = HttpGetBytes(url);
-                byte[] data = localpath2bytes(readpath); // 读取用户计算机本地文件 已测 无问题                          
+                stopwatch.Restart();
+                byte[] data = HttpGetBytes(url);
+                //byte[] data = localpath2bytes(readpath); // 读取用户计算机本地文件 已测 无问题                          
                 #region 结构体 重新分配内存初始化
                 var init = private_init_state();
                 int size = Marshal.SizeOf(init);
@@ -45,9 +46,10 @@ namespace adpcm
 
                 adpcmg721towav(data, intPtr, savepath + Guid.NewGuid().ToString() + ".wav");// 如果文件写入失败 则需要查看 Windwos 当前登录的用户权限问题 和目录权限 NTFS 拒绝大于允许
                 Console.WriteLine(string.Format("循环第{0}次执行完毕", i + 1));
+                stopwatch.Stop();
+                Console.WriteLine(string.Format("耗时:{0}ms", stopwatch.ElapsedMilliseconds));
             }
-            stopwatch.Stop();
-            Console.WriteLine(string.Format("耗时:{0}ms", stopwatch.ElapsedMilliseconds));
+           
             Console.WriteLine("执行完毕请查看");
             Console.ReadKey();
         }
