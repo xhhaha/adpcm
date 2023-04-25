@@ -18,12 +18,12 @@ G72x_STATE* getG72x_STATE() {
 
 dllexport void getadpcm_decoder(char* indata, short* outdata, int len, G72x_STATE* state) {
 	//G72x_STATE* jietouti = getG72x_STATE();
-	std::cout << "C++ 提示：已声明结构体" << std::endl;
+	//std::cout << "C++ 提示：已声明结构体" << std::endl;
 	//private_init_state(state);
-	std::cout << "C++ 提示：结构体初始化" << std::endl;
-	std::cout << "C++ 提示：解码函数开始执行" << std::endl;
+	//std::cout << "C++ 提示：结构体初始化" << std::endl;
+	//std::cout << "C++ 提示：解码函数开始执行" << std::endl;
 	adpcm_decoder(indata,outdata,len, state);
-	std::cout << "C++ 提示：解码函数执行完毕" << std::endl;
+	//std::cout << "C++ 提示：解码函数执行完毕" << std::endl;
 }
 
 
